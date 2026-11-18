@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laboratoriya: PaaS Deploy, IAM va Kod Himoyasi</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --code-bg: #0f172a;
+      --code-text: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: white;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      border-bottom: 3px solid var(--primary);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      font-size: 1rem;
+      color: #94a3b8;
+      max-width: 750px;
+      margin: 0 auto;
+    }
+
+    .badges {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    main {
+      max-width: 950px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      color: var(--text);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      color: var(--primary-dark);
+      margin: 1.2rem 0 0.5rem 0;
+    }
+
+    p, li {
+      color: var(--text-muted);
+    }
+
+    .highlight-box {
+      background: #eff6ff;
+      border-left: 4px solid var(--primary);
+      padding: 1rem 1.2rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+      color: #1e3a8a;
+      font-size: 0.95rem;
+    }
+
+    .code-block {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+
+    .step-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+      margin-top: 1rem;
+      background: #fafafa;
+    }
+
+    .step-badge {
+      background: var(--primary);
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      margin-right: 0.4rem;
+    }
+
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    li {
+      margin-bottom: 0.4rem;
+    }
+
+    /* Rollar jadvali */
+    .roles-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.92rem;
+    }
+
+    .roles-table th, .roles-table td {
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      text-align: left;
+    }
+
+    .roles-table th {
+      background: #f1f5f9;
+      color: var(--text);
+    }
+
+    .roles-table tr:hover {
+      background: #f8fafc;
+    }
+
+    /* Checklist */
+    .checklist {
+      list-style: none;
+      margin-left: 0;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .check-item:last-child {
+      border-bottom: none;
+    }
+
+    .check-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 0.25rem;
+      cursor: pointer;
+    }
+
+    /* Form & Report Generator */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      color: var(--text);
+    }
+
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+    }
+
+    #report-output {
+      display: none;
+      margin-top: 1.5rem;
+      border: 2px dashed var(--primary);
+      padding: 1.5rem;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #report-output, #report-output * {
+        visibility: visible;
+      }
+      #report-output {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        border: none;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>PaaS Deploy, IAM va Kod Xavfsizligi</h1>
+    <p>GitHub Pages platformasi orqali server boshqaruvisiz veb-saytni ishga tushirish, kirish huquqlari (RBAC) va Branch Protection qoidalarini sozlash laboratoriyasi</p>
+    <div class="badges">
+      <span class="badge">☁️ Model: PaaS</span>
+      <span class="badge">⏱️ Ajratilgan vaqt: 45 daqiqa</span>
+      <span class="badge">🛠️ Asbob: Faqat brauzer</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Maqsad -->
+    <section>
+      <h2>🎯 1. Nazariy Tushuncha va Maqsad</h2>
+      <p>
+        <strong>PaaS (Platform as a Service)</strong> — dasturchi yoki muhandisga operatsion tizim, veb-server (Nginx/Apache), tarmoq xavfsizligi kabi murakkab infratuzilma bilan bosh qotirmasdan, faqat o'z kodi va ma'lumotlariga e'tibor qaratish imkonini beradi.
+      </p>
+      <div class="highlight-box">
+        <strong>Laboratoriya vazifasi:</strong> Mahalliy kompyuterda oddiy veb-sahifa tayyorlash, uni GitHub platformasiga joylash, GitHub Pages orqali bir necha soniyada jonli efirga chiqarish hamda loyihaga jamoaviy rollar (RBAC) va himoya siyosatini (Branch Protection) joriy etish.
+      </div>
+    </section>
+
+    <!-- Qadamlar -->
+    <section>
+      <h2>🚀 2. Amaliy Bosqichlar</h2>
+
+      <!-- 1-Qadam -->
+      <div class="step-item">
+        <h3><span class="step-badge">1-QADAM</span> Mahalliy <code>index.html</code> faylini yaratish</h3>
+        <p>Ish stolida yangi matn hujjati yarating, uning nomini va formatini <strong><code>index.html</code></strong> ga o'zgartiring hamda quyidagi kodni Bloknot (Notepad) orqali kiritib saqlang:</p>
+        <div class="code-block">&lt;!DOCTYPE html&gt;
+&lt;html lang="uz"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;PaaS Bulut Laboratoriyasi&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: sans-serif; text-align: center; padding-top: 60px; background: #f0f4f8; }
+    .box { background: white; max-width: 480px; margin: 0 auto; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    h1 { color: #0284c7; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="box"&gt;
+    &lt;h1&gt;PaaS Loyihasi Jonli Rejimda!&lt;/h1&gt;
+    &lt;p&gt;Ushbu veb-sahifa server o'rnatmasdan platforma orqali global tarmoqqa chiqarildi.&lt;/p&gt;
+    &lt;p&gt;&lt;strong&gt;Bajaruvchi:&lt;/strong&gt; Talaba F.I.Sh&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</div>
+      </div>
+
+      <!-- 2-Qadam -->
+      <div class="step-item">
+        <h3><span class="step-badge">2-QADAM</span> GitHub-da Repozitoriy Ochish va Faylni Yuklash</h3>
+        <ol>
+          <li>Brauzerda <strong>github.com</strong> saytiga kiring va profilingizdan <strong>«New repository»</strong> tugmasini bosing.</li>
+          <li>Repozitoriy nomiga <strong><code>cloud-lab</code></strong> deb yozing va kirish huquqini <strong>Public</strong> holatida qoldiring.</li>
+          <li><strong>«Create repository»</strong> tugmasini bosing.</li>
+          <li>Keyingi oynada <strong>«uploading an existing file»</strong> havolasini bosing va tayyorlagan <code>index.html</code> faylingizni yuklab, <strong>«Commit changes»</strong> tugmasini bosing.</li>
+        </ol>
+      </div>
+
+      <!-- 3-Qadam -->
+      <div class="step-item">
+        <h3><span class="step-badge">3-QADAM</span> GitHub Pages orqali Deploy qilish (PaaS Amaliyoti)</h3>
+        <ol>
+          <li>Repozitoriyning yuqori menyusidagi <strong>«Settings»</strong> bo'limiga o'ting.</li>
+          <li>Chap ustundagi ro'yxatdan <strong>«Pages»</strong> bandini tanlang.</li>
+          <li><strong>Branch</strong> qismida `None` o'rniga <strong>`main`</strong> ni tanlab, <strong>«Save»</strong> tugmasini bosing.</li>
+          <li>30–60 soniya kutib, sahifani yangilang (F5). Sizga jonli internet manzili taqdim etiladi:  
+            <br><code>https://[profil-nomi].github.io/cloud-lab/</code>
+          </li>
+        </ol>
+      </div>
+
+      <!-- 4-Qadam -->
+      <div class="step-item">
+        <h3><span class="step-badge">4-QADAM</span> Kirish Nazorati (IAM / RBAC) va Rollar Taqsimoti</h3>
+        <p>Loyiha sozlamalaridan <strong>«Collaborators»</strong> menyusiga kiring va <strong>«Add people»</strong> orqali guruhdoshingizga taklifnoma yuboring.</p>
+        <p><strong>PaaS va korporativ muhitdagi asosiy rollar mohiyati:</strong></p>
+        <table class="roles-table">
+          <thead>
+            <tr>
+              <th>Rol (Role)</th>
+              <th>Huquq darajasi</th>
+              <th>Xavfsizlik maqsadi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Read</strong></td>
+              <td>Faqat ko'rish va klonlash</td>
+              <td>Audit o'tkazuvchilar va kuzatuvchilar uchun</td>
+            </tr>
+            <tr>
+              <td><strong>Write</strong></td>
+              <td>Kod yuklash va tahrirlash</td>
+              <td>Jamoa dasturchilari uchun</td>
+            </tr>
+            <tr>
+              <td><strong>Admin</strong></td>
+              <td>To'liq boshqaruv (o'chirish, ruxsat berish)</td>
+              <td>Faqat loyiha egasi va yetakchi mutaxassis uchun</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 5-Qadam -->
+      <div class="step-item">
+        <h3><span class="step-badge">5-QADAM</span> Kod Himoyasi Siyosati (Branch Protection)</h3>
+        <p>Asosiy kodni (main) ruxsatsiz o'zgartirish yoki tasodifan o'chirib yuborishdan himoyalash:</p>
+        <ol>
+          <li><strong>Settings -> Branches</strong> bo'limiga o'ting.</li>
+          <li><strong>«Add branch ruleset»</strong> (yoki <em>Add rule</em>) tugmasini bosing.</li>
+          <li>Target branch: <strong>`main`</strong> deb belgilang.</li>
+          <li><strong>«Restrict deletions»</strong> va <strong>«Require a pull request before merging»</strong> bandlarini faollashtirib, saqlang.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Tekshirish -->
+    <section>
+      <h2>✅ 3. Talaba O'zini Tekshirish Nazorat Ro'yxati (Checklist)</h2>
+      <ul class="checklist">
+        <li class="check-item">
+          <input type="checkbox" id="c1">
+          <label for="c1"><strong>Deploy qilindi:</strong> Sayt GitHub Pages orqali internetda ochiq ochilmoqda.</label>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" id="c2">
+          <label for="c2"><strong>RBAC joriy etildi:</strong> Collaborators bo'limida kamida 1 nafar foydalanuvchiga taklifnoma yuborildi.</label>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" id="c3">
+          <label for="c3"><strong>Xavfsizlik yoqildi:</strong> `main` tarmog'i uchun Branch Protection faol holatga keltirildi.</label>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Hisobot Formasi -->
+    <section>
+      <h2>📝 4. Laboratoriya Hisobotini Shakllantirish</h2>
+      <p style="margin-bottom: 1rem;">Maydonlarni to'ldiring va hisobotni PDF formatida yuklab oling yoki chop eting:</p>
+
+      <div class="form-group">
+        <label>Talaba F.I.Sh:</label>
+        <input type="text" id="inp-name" placeholder="Masalan: Sobirov Doniyor">
+      </div>
+
+      <div class="form-group">
+        <label>Guruh raqami:</label>
+        <input type="text" id="inp-group" placeholder="Masalan: 415-21">
+      </div>
+
+      <div class="form-group">
+        <label>Ishga tushirilgan jonli sayt havolasi (GitHub Pages URL):</label>
+        <input type="text" id="inp-url" placeholder="https://foydalanuvchi.github.io/cloud-lab/">
+      </div>
+
+      <div class="form-group">
+        <label>Xulosa va tahlil (Nima uchun PaaS modelida server sozlash talab etilmadi?):</label>
+        <textarea id="inp-summary" rows="3" placeholder="PaaS modeli server, tarmoq va OS boshqaruvini platforma zimmasiga oladi. Biz faqat kodni yukladik va kirish nazoratini sozladik..."></textarea>
+      </div>
+
+      <button class="btn" onclick="buildReport()">Hisobotni Ko'rish / Chop Etish</button>
+
+      <div id="report-output">
+        <h3 style="color: #0f172a; border-bottom: 2px solid #0f172a; padding-bottom: 0.5rem; margin-top: 0;">PaaS VA KIRISH NAZORATI (IAM) BO'YICHA AMALIY ISH HISOBOTI</h3>
+        <p style="margin: 0.8rem 0;"><strong>Talaba:</strong> <span id="out-name"></span> | <strong>Guruh:</strong> <span id="out-group"></span></p>
+        <p><strong>Ishga tushgan resurs havolasi:</strong> <a id="out-url" href="#" target="_blank" style="color: var(--primary);"></a></p>
+        <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 1rem; border-radius: 6px; margin: 1rem 0;">
+          <strong>Nazariy va amaliy xulosa:</strong>
+          <p id="out-summary" style="margin-top: 0.5rem; color: #1e293b; white-space: pre-wrap;"></p>
+        </div>
+        <p style="font-size: 0.88rem; color: #64748b;"><em>Hisobot ilovasi: Talaba repozitoriyning «Pages», «Collaborators» hamda «Branch protection» oynalaridan olingan 3 ta tasdiqlovchi skrinshotni ushbu varaqqa biriktirishi shart.</em></p>
+        <button class="btn no-print" style="margin-top: 1.2rem;" onclick="window.print()">🖨️ PDF sifatida saqlash / Chop etish</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function buildReport() {
+      const name = document.getElementById('inp-name').value.trim();
+      const group = document.getElementById('inp-group').value.trim();
+      const url = document.getElementById('inp-url').value.trim();
+      const summary = document.getElementById('inp-summary').value.trim();
+
+      if (!name || !group || !url || !summary) {
+        alert("Iltimos, barcha maydonlarni to'liq to'ldiring!");
+        return;
+      }
+
+      document.getElementById('out-name').innerText = name;
+      document.getElementById('out-group').innerText = group;
+      const urlLink = document.getElementById('out-url');
+      urlLink.innerText = url;
+      urlLink.href = url;
+      document.getElementById('out-summary').innerText = summary;
+
+      const reportArea = document.getElementById('report-output');
+      reportArea.style.display = 'block';
+      reportArea.scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
